@@ -38,8 +38,9 @@ def normalize(text: str) -> str:
     text = APOSTROPHES.sub("", text)
     return text.lower()
 
-
-BLACKLIST = [normalize(word) for word in _raw_blacklist]
+BLACKLIST = [
+    normalize(word) for word in _raw_blacklist if normalize(word).strip()
+]
 
 
 async def spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
