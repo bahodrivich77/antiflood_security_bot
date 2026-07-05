@@ -20,9 +20,9 @@ with open("blacklist.json", encoding="utf8") as f:
     _raw_blacklist = json.load(f)
 
 LINK = re.compile(
-    r"(https?://|t\.me/|telegram\.me/|@\w+)",
-    re.I
-)
+       r"(https?://|t\.me/|telegram\.me/)",
+       re.I
+   )
 
 # Reklamachilar so'z ichiga ko'zga ko'rinmas belgilar (zero-width,
 # invisible Unicode) qo'shib filtrlardan qochishga harakat qiladi.
