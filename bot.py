@@ -20,9 +20,9 @@ with open("blacklist.json", encoding="utf8") as f:
     _raw_blacklist = json.load(f)
 
 LINK = re.compile(
-       r"(https?://|t\.me/|telegram\.me/)",
-       re.I
-   )
+    r"(https?://|t\.me/|telegram\.me/)",
+    re.I
+)
 
 # Reklamachilar so'z ichiga ko'zga ko'rinmas belgilar (zero-width,
 # invisible Unicode) qo'shib filtrlardan qochishga harakat qiladi.
@@ -44,6 +44,10 @@ BLACKLIST = [normalize(word) for word in _raw_blacklist]
 
 async def spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
+        return
+
+    # "A'zo qo'shildi/chiqdi" kabi tizim xabarlarini tekshirmaymiz
+    if update.message.new_chat_members or update.message.left_chat_member:
         return
 
     if update.effective_chat.type == "private":
@@ -126,7 +130,10 @@ def main():
     )
 
     app.add_handler(
-        MessageHandler(filters.ALL, spam)
+        MessageHandler(
+            (filters.TEXT | filters.CAPTION) & ~filters.StatusUpdate.ALL,
+            spam
+        )
     )
 
     for h in handlers:
