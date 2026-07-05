@@ -17,12 +17,29 @@ from database import init_db
 from keepalive import start_keepalive
 
 with open("blacklist.json", encoding="utf8") as f:
-    BLACKLIST = json.load(f)
+    _raw_blacklist = json.load(f)
 
 LINK = re.compile(
     r"(https?://|t\.me/|telegram\.me/|@\w+)",
     re.I
 )
+
+# Reklamachilar so'z ichiga ko'zga ko'rinmas belgilar (zero-width,
+# invisible Unicode) qo'shib filtrlardan qochishga harakat qiladi.
+# Tekshirishdan oldin bunday belgilarni va apostroflarni tozalaymiz.
+INVISIBLE_CHARS = re.compile(
+    r"[\u200b\u200c\u200d\u200e\u200f\ufeff\u2060-\u2064\u206a-\u206f]"
+)
+APOSTROPHES = re.compile(r"[\'\u2018\u2019\u02bc\u02bb`]")
+
+
+def normalize(text: str) -> str:
+    text = INVISIBLE_CHARS.sub("", text)
+    text = APOSTROPHES.sub("", text)
+    return text.lower()
+
+
+BLACKLIST = [normalize(word) for word in _raw_blacklist]
 
 
 async def spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -40,11 +57,11 @@ async def spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if member.status in ["administrator", "creator"]:
         return
 
-    text = (
+    text = normalize(
         update.message.text
         or update.message.caption
         or ""
-    ).lower()
+    )
 
     # 1) Flood tekshiruvi (10 soniyada 5 tadan ortiq xabar)
     if await flood(update.effective_user.id):
